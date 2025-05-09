@@ -1,9 +1,8 @@
-
 #include <Wire.h>
 
 //Anschlüsse Sensoren
-int SensorSignalSchacht = 9;
-int SensorSignalKontrolle = 2;
+int CoinSensor = 9;
+
 
 int CoinIst = 0;                 //Int fürs zählen
 volatile int CoinKontrolle = 0;  // Int für die überwachung der richtigen Auszahlung
@@ -22,7 +21,7 @@ bool EncoderClickAble = true;  //Kann der click ausgeführt werden
 
 //Sensoren config
 unsigned long Sensor_time = 0;  //Zum Speichern der zeit für den letzten gemessenen Coin
-int Sensor_delay_time = 5;    //Wie lange soll der Sensor nach erkennen deaktiviert werden
+int Sensor_delay_time = 5;      //Wie lange soll der Sensor nach erkennen deaktiviert werden
 byte Sensor_State = 0;
 byte Sensor_Event = 0;
 
@@ -41,6 +40,7 @@ void setup() {
   pinMode(MotorDrehzahl, OUTPUT);  //PWM
   pinMode(in1, OUTPUT);            // +
   pinMode(in2, OUTPUT);            // -
+  pinMode(CoinSensor, INPUT_PULLUP);
 
   LcdSetup();
   EncoderSetup();
@@ -70,7 +70,7 @@ void loop() {
 
   EncoderLesen();
 
-
+  Serial.println(digitalRead(9));
 }
 
 
@@ -104,9 +104,6 @@ void CoinsAuszahlen(int CoinSoll) {
       break;
     }
 
-    if (CoinIst == CoinSoll - 1) {
-      MotorDrehen(MotorGeschwindigkeitSlow);
-    }
     /*if (digitalRead(SensorSignalSchacht) == LOW && millis() >= Sensor_time + Sensor_delay_time) {
       Sensor_time = millis();
       CoinIst = CoinIst + 1;
@@ -121,36 +118,37 @@ void CoinsAuszahlen(int CoinSoll) {
     }*/
 
     switch (Sensor_State) {
-    case 0: 
-      if (!digitalRead(SensorSignalKontrolle)) {
-        Sensor_State = 1;
-        Sensor_time = millis();
-        Serial.print("LOW: ");
-        Serial.println(Sensor_time);
-      }
-      break;
-    case 1: 
-      if (digitalRead(SensorSignalKontrolle)) {
-        Sensor_State = 0;
-        if (millis() - Sensor_time > Sensor_delay_time) {
-          Sensor_Event = 1;
-          Serial.print("High");
+      case 0:
+        if (digitalRead(CoinSensor)) {
+          Sensor_State = 1;
+          Sensor_time = millis();
+          Serial.print("LOW: ");
           Serial.println(Sensor_time);
         }
-      }
-      break;
-  }
+        break;
+      case 1:
+        if (!digitalRead(CoinSensor)) {
+          Sensor_State = 0;
+          if (millis() - Sensor_time > Sensor_delay_time) {
+            Sensor_Event = 1;
+            Serial.print("High");
+            Serial.println(Sensor_time);
+          }
+        }
+        break;
+    }
 
-  //Auswertung Sensor
-  if (Sensor_Event == 1) {
-    Sensor_Event = 0; //Ereignis zurücksetzten
-    CoinIst = CoinIst + 1;
+    //Auswertung Sensor
+    if (Sensor_Event == 1) {
+      Sensor_Event = 0;  //Ereignis zurücksetzten
+      CoinIst = CoinIst + 1;
       LcdInAuszahlung(CoinSoll, CoinIst);
       //Serial.print(CoinIst);
       //Serial.print(" ");
       //Serial.println(Sensor_time);
+    }
   }
-  }
+  
   Serial.println("Auszahlung beendet");
   EncoderClickAble = true;
   Interaktion();
@@ -174,10 +172,4 @@ void CoinsAuszahlen(int CoinSoll) {
 void Interaktion() {
   Interaktions_time = millis();
   Interaktions_time_out = true;
-}
-void KontrollSensor() {
-  if (millis() >= Sensor_time_Kontrolle + Sensor_delay_time_Kontrolle) {
-    CoinKontrolle = CoinKontrolle + 1;
-    Sensor_time_Kontrolle = millis();
-  }
 }
