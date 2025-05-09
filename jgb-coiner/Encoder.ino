@@ -10,8 +10,6 @@ int Click_delay_time = 1000;   //Wie lange soll der Knopf nach dem Clicken aus s
 
 int anzahl = 0;                // Int für den encoder
 
-
-
 Encoder meinEncoder(DT, CLK);  // An dieser Stelle wird ein neues Encoder Projekt erstellt. Dabei wird die Verbindung über die zuvor definierten Varibalen (DT und CLK) hergestellt.
 
 void EncoderSetup(){
@@ -25,7 +23,7 @@ void EncoderLesen(){
   bool Encoder_Click = digitalRead(SW);
   if (neueAnzahl <= -3) {
     if (anzahl > 0) {
-      anzahl -= 5;
+      anzahl -= 1;
       //Serial.println(anzahl);
       LcdEncoder(anzahl);
     }
@@ -33,7 +31,7 @@ void EncoderLesen(){
     Interaktion();
 
   } else if (neueAnzahl >= 3) {
-    anzahl += 5;
+    anzahl += 1;
     //Serial.println(anzahl);
     LcdEncoder(anzahl);
     Interaktion();

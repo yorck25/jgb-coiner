@@ -1,6 +1,7 @@
 #include <Wire.h>
 
 //Anschlüsse Sensoren
+const float pricePerCoin = 2.50; 
 int CoinSensor = 9;
 
 

@@ -40,9 +40,17 @@ void LcdAbbruchAuszahlung(int s, int i) {
 void LcdEncoder(int a) {
   if (millis() - lastwriteLCD > 200) {
     lastwriteLCD = millis();
+    float preis = a * pricePerCoin;
+
     lcd.clear();
+    lcd.setCursor(0, 0);
     lcd.print("Coins: ");
     lcd.print(a);
+
+    lcd.setCursor(0, 1);
+    lcd.print("Preis: ");
+    lcd.print(preis, 2);
+    lcd.print(" EUR");
   }
 }
 
