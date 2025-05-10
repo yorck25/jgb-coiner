@@ -8,6 +8,9 @@ long alteAnzahl = -999;        // Definition der "alten" Position (Diese fiktive
 unsigned long Click_time = 0;  //Zum Speichern der zeit für den letzten Click
 int Click_delay_time = 1000;   //Wie lange soll der Knopf nach dem Clicken aus sein
 
+const int fastMode = 100;
+unsigned long lastEncoderChangeTime = 0;
+
 int anzahl = 0;                // Int für den encoder
 
 Encoder meinEncoder(DT, CLK);  // An dieser Stelle wird ein neues Encoder Projekt erstellt. Dabei wird die Verbindung über die zuvor definierten Varibalen (DT und CLK) hergestellt.
@@ -18,26 +21,28 @@ void EncoderSetup(){
 }
 
 void EncoderLesen(){
-    //Anzahl der Coins die augezahlt werden über Encoder abfragen
   int32_t neueAnzahl = meinEncoder.read();
   bool Encoder_Click = digitalRead(SW);
+  unsigned long currentTime = millis();
+
   if (neueAnzahl <= -3) {
     if (anzahl > 0) {
       anzahl -= 1;
-      //Serial.println(anzahl);
       LcdEncoder(anzahl);
     }
     meinEncoder.write(neueAnzahl + 4);
     Interaktion();
+    lastEncoderChangeTime = currentTime;
 
   } else if (neueAnzahl >= 3) {
-    anzahl += 1;
-    //Serial.println(anzahl);
+    int increment = (currentTime - lastEncoderChangeTime < fastMode) ? 5 : 1;
+    anzahl += increment;
     LcdEncoder(anzahl);
     Interaktion();
     meinEncoder.write(neueAnzahl - 4);
+    lastEncoderChangeTime = currentTime;
   }
-    //Per Encoder Click in die auszahlung
+
   if (Encoder_Click == LOW && millis() >= Click_time + Click_delay_time && EncoderClickAble == true) {
     Click_time = millis();
     EncoderClickAble = false;
